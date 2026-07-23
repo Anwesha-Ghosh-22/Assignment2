@@ -1,0 +1,72 @@
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.List;
+
+public class DocumentValidator {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(DocumentValidator.class);
+
+    public ValidationResult validate(Document doc) {
+        try {
+
+            if (doc == null) {
+                // FIX: Use a specific exception for expected validation failures
+                throw new ValidationException("Document is null");
+            }
+
+            String content = doc.extractContent();
+
+            if (content == null || content.isEmpty()) {
+                // FIX: Use ValidationException instead of RuntimeException
+                throw new ValidationException("Empty content");
+            }
+
+            return runValidationRules(content);
+
+        } catch (ValidationException e) {
+            // FIX: Log expected validation failures without stack trace
+            logger.warn("Validation failed: {}", e.getMessage());
+
+            // FIX: Never return null; return a failed ValidationResult
+            return ValidationResult.invalid(e.getMessage());
+
+        } catch (Exception e) {
+            // FIX: Log unexpected runtime errors with stack trace
+            logger.error("Unexpected error during document validation", e);
+
+            return ValidationResult.invalid("Unexpected validation error");
+        }
+    }
+
+    public void validateBatch(List<Document> docs) {
+
+        for (Document doc : docs) {
+            try {
+
+                ValidationResult r = validate(doc);
+
+                // FIX: Prevent NullPointerException before calling isValid()
+                if (r != null && r.isValid()) {
+                    saveResult(r);
+                }
+
+            } catch (ValidationException e) {
+                // FIX: Log expected validation failures instead of swallowing
+                logger.warn("Skipping invalid document: {}", e.getMessage());
+
+            } catch (Exception e) {
+                // FIX: Log unexpected exceptions instead of silently swallowing
+                logger.error("Error validating document in batch", e);
+            }
+        }
+    }
+
+    // Existing methods (unchanged)
+    private ValidationResult runValidationRules(String content) {
+        return null;
+    }
+
+    private void saveResult(ValidationResult result) {
+    }
+}
