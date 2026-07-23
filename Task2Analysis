@@ -1,0 +1,41 @@
+1. What is the exact cause of ConcurrentModificationException in Java?
+
+A ConcurrentModificationException occurs when a collection (such as an ArrayList) is structurally modified while it is being iterated using an Iterator or an enhanced for loop, except through the iterator's own remove() method.
+
+Structural modifications include:
+
+add()
+remove()
+clear()
+
+During iteration, the iterator checks the collection's internal modification count (modCount). If it detects that the collection has been modified outside the iterator, it throws a ConcurrentModificationException (fail-fast behavior).
+
+2. What code pattern at line 142 most likely triggered this error?
+
+The most likely pattern is removing an element from the list inside an enhanced for loop.
+
+for (Transaction txn : transactions) {
+    if (txn.isInvalid()) {
+        transactions.remove(txn);   // Causes ConcurrentModificationException
+    }
+}
+
+or equivalently:
+
+Iterator<Transaction> it = transactions.iterator();
+while (it.hasNext()) {
+    Transaction txn = it.next();
+    transactions.remove(txn);       // Causes ConcurrentModificationException
+}
+
+The exception occurs because the collection is modified directly while its iterator is still in use.
+
+3. Provide the minimal code change (one or two lines) that resolves this safely.
+
+Replace the direct removal with the iterator's remove() method.
+
+Iterator<Transaction> it = transactions.iterator();
+...
+it.remove();   // Safe removal during iteration
+
+This is the minimal and recommended fix because Iterator.remove() updates the iterator's state correctly and avoids the ConcurrentModificationException.
